@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
+from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.viewsets import ModelViewSet
 
@@ -33,7 +34,7 @@ class CommentViewSet(ModelViewSet):
         return post.comments
 
 
-class FollowViewSet(ModelViewSet):
+class FollowListView(ListCreateAPIView):
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -44,7 +45,7 @@ class FollowViewSet(ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-class GroupViewSet(ModelViewSet):
+class GroupListView(ListCreateAPIView):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permission_classes = (UserIsAuthorPermission,)

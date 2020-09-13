@@ -1,9 +1,8 @@
-from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework.serializers import CurrentUserDefault
+from rest_framework.validators import UniqueTogetherValidator
 
-from api.models import Comment, Follow, Group, Post
-
-User = get_user_model()
+from api.models import Comment, Follow, Group, Post, User
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -11,7 +10,7 @@ class PostSerializer(serializers.ModelSerializer):
                                           read_only=True)
 
     class Meta:
-        fields = ('id', 'text', 'author', 'pub_date', )
+        fields = '__all__'
         model = Post
 
 
@@ -20,29 +19,29 @@ class CommentSerializer(serializers.ModelSerializer):
                                           read_only=True)
 
     class Meta:
-        fields = ('id', 'author', 'text', 'post', 'created')
+        fields = '__all__'
         model = Comment
 
 
 class FollowSerializer(serializers.ModelSerializer):
-    user = serializers.SlugRelatedField(slug_field='username', read_only=True)
+    user = serializers.SlugRelatedField(slug_field='username', read_only=True,
+                                        default=CurrentUserDefault())
     following = serializers.SlugRelatedField(slug_field='username',
                                              queryset=User.objects.all())
 
     class Meta:
-        fields = ('user', 'following')
+        fields = '__all__'
         model = Follow
 
-    def validate_following(self, value):
-        request = self.context['request']
-        if Follow.objects.filter(user=request.user).filter(following=value).exists():
-            raise serializers.ValidationError("Вы уже подписаны на этого "
-                                              "автора")
-        return value
+        validators = (
+            UniqueTogetherValidator(
+                queryset=Follow.objects.all(),
+                fields=('user', 'following')
+            ),
+        )
 
 
 class GroupSerializer(serializers.ModelSerializer):
-
     class Meta:
-        fields = ('id', 'title', )
+        fields = ('id', 'title',)
         model = Group
